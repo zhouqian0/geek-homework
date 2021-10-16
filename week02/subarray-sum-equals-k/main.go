@@ -1,3 +1,4 @@
+// 力扣 560 和为 K 的子数组（https://leetcode-cn.com/problems/subarray-sum-equals-k/）
 package main
 
 // 时间复杂度 O(n)，n 为 nums 长度，因为只需要一次遍历就可以统计出结果，每次遍历中对无序集合的查找耗时 O(1)，可以忽略，故而总耗时为 O(n)。
