@@ -2,7 +2,7 @@ package mai
 
 import "math"
 
-// 时间复杂度为 O(nlogm)，其中 n 为 piles 长度， m 为 piles 中的所有堆的香蕉总量减去 piles中最小一堆中包含的香蕉总量。
+// 时间复杂度为 O(nlogm)，其中 n 为 piles 长度， m 为 piles 中的最大堆中的香蕉总量减去 piles中最小一堆中包含的香蕉总量。
 // 		因为在刚开始执行二分时，所有的待二分的元素总量为 m，所以二分耗时 O(logm)，
 //		而每次的二分都要执行 valid 函数，在 valid 函数中，需要遍历一次 piles，而遍历 piles 的时间复杂度为 O(n)，
 //		所以总时间复杂度为 O(nlogm)。
@@ -13,7 +13,7 @@ func minEatingSpeed(piles []int, h int) int {
 	var left, right int
 	for _, pile := range piles {
 		left = min(left, pile)
-		right += pile
+		right = max(right, pile)
 	}
 
 	// 开始二分，找到第一个满足条件的 mid 值（mid 表示每小时吃 mid 根香蕉）
@@ -49,6 +49,14 @@ func valid(piles []int, h, num int) bool {
 // min 比较两个整数，返回其中较小值。
 func min(a, b int) int {
 	if a < b {
+		return a
+	}
+	return b
+}
+
+// max 比较两个整数，返回其中较大值。
+func max(a, b int) int {
+	if a > b {
 		return a
 	}
 	return b
