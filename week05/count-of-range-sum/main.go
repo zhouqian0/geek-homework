@@ -58,3 +58,7 @@ func countRangeSum(nums []int, lower int, upper int) int {
 	// 对前缀和数组进行区间和个数统计
 	return mergeCount(perSum)
 }
+
+func main() {
+	countRangeSum([]int{-2, 5, 1}, -2, 2)
+}
