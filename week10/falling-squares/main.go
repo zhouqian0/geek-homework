@@ -1,120 +1,134 @@
 package main
 
-type segmentTree struct {
+import "sort"
+
+type SegmentTree struct {
 	max    []int
 	change []int
 	update []bool
 }
 
-func NewsegmentTree(size int) *segmentTree {
-	N := size + 1
-	return &segmentTree{
-		max:    make([]int, N<<2),
-		change: make([]int, N<<2),
-		update: make([]bool, N<<2),
+// NewSegmentTree  创建一颗线段树。
+func NewSegmentTree(size int) *SegmentTree {
+	// 因为下标从一开始，所以 + 1
+	l := 4 * (size + 1)
+	return &SegmentTree{
+		max:    make([]int, l),
+		change: make([]int, l),
+		update: make([]bool, l),
 	}
 }
 
-func (seg *segmentTree) pushUp(rt int) {
-	seg.max[rt] = Max(seg.max[rt<<1], seg.max[rt<<1|1])
+// pushUp 计算当前节点的 max。
+func (s *SegmentTree) pushUp(p int) {
+	s.max[p] = max(s.max[p*2], s.max[p*2+1])
 }
 
-// ln表示左子树元素结点个数，rn表示右子树结点个数
-func (seg *segmentTree) pushDown(rt, ln, rn int) {
-	if !seg.update[rt] {
+// pushDown 更新子节点。
+func (s *SegmentTree) pushDown(p int) {
+	// 如果当前节点无需更新
+	if !s.update[p] {
 		return
 	}
 
-	seg.update[rt<<1] = true
-	seg.update[rt<<1|1] = true
-	seg.change[rt<<1] = seg.change[rt]
-	seg.change[rt<<1|1] = seg.change[rt]
-	seg.max[rt<<1] = seg.change[rt]
-	seg.max[rt<<1|1] = seg.change[rt]
-	seg.update[rt] = false
+	// 将当前节点的属性更新到子节点
+	s.update[p*2] = true
+	s.update[p*2+1] = true
+	s.change[p*2] = s.change[p]
+	s.change[p*2+1] = s.change[p]
+	s.max[p*2] = s.change[p]
+	s.max[p*2+1] = s.change[p]
+	s.update[p] = false
 }
 
-func (seg *segmentTree) Update(L, R, C, l, r, rt int) {
+// Update 更新
+func (s *SegmentTree) Update(L, R, H, l, r, p int) {
 	if L <= l && r <= R {
-		seg.update[rt] = true
-		seg.change[rt] = C
-		seg.max[rt] = C
+		s.update[p] = true
+		s.change[p] = H
+		s.max[p] = H
 		return
 	}
 
-	mid := (l + r) >> 1
-	seg.pushDown(rt, mid-l+1, r-mid)
+	mid := (l + r) / 2
+	// 更新子节点
+	s.pushDown(p)
 	if L <= mid {
-		seg.Update(L, R, C, l, mid, rt<<1)
+		s.Update(L, R, H, l, mid, p*2)
 	}
 	if R > mid {
-		seg.Update(L, R, C, mid+1, r, rt<<1|1)
+		s.Update(L, R, H, mid+1, r, p*2+1)
 	}
-	seg.pushUp(rt)
+	// 更新当前节点
+	s.pushUp(p)
 }
 
-func (seg *segmentTree) query(L, R, l, r, rt int) int {
+// Query 查询线段树。
+func (s *SegmentTree) Query(L, R, l, r, p int) int {
+	// 如果当前的左右区间正好在合法范围内
 	if L <= l && r <= R {
-		return seg.max[rt]
+		return s.max[p]
 	}
-	mid := (l + r) >> 1
-	seg.pushDown(rt, mid-l+1, r-mid)
-	left := 0
-	right := 0
+	mid := (l + r) / 2
+	s.pushDown(p)
+	// 分别计算左右子树的高度
+	lh, rh := 0, 0
 	if L <= mid {
-		left = seg.query(L, R, l, mid, rt<<1)
+		lh = s.Query(L, R, l, mid, p*2)
 	}
 	if R > mid {
-		right = seg.query(L, R, mid+1, r, rt<<1|1)
+		rh = s.Query(L, R, mid+1, r, p*2+1)
 	}
-	return Max(left, right)
+	return max(lh, rh)
 }
 
+// index 坐标压缩。
 func index(positions [][]int) map[int]int {
-	pos := make(map[int]bool)
-	for _, arr := range positions {
-		pos[arr[0]] = true
-		pos[arr[0]+arr[1]-1] = true
+	// 坐标去重
+	mp := make(map[int]bool)
+	for _, info := range positions {
+		left, sideLen := info[0], info[1]
+		mp[left], mp[left+sideLen-1] = true, true
 	}
 
-	tmp := make([]int, len(pos))
-	index := 0
-	for key, _ := range pos {
-		tmp[index] = key
-		index++
+	// 坐标排序
+	tmp := make([]int, 0, len(mp))
+	for key := range mp {
+		tmp = append(tmp, key)
 	}
 	sort.Ints(tmp)
 
-	mp := make(map[int]int)
-	count := 0
-	for _, value := range tmp {
-		count++
-		mp[value] = count
+	// 坐标压缩
+	pos, cnt := make(map[int]int), 0
+	for _, v := range tmp {
+		cnt++
+		pos[v] = cnt
 	}
-	return mp
+	return pos
 }
 
-func fallingSquares(positions [][]int) []int {
+// 时间复杂度 O(nlogn)，n 为 positions 的长度，也就是线段树的时间复杂度。
+// 空间复杂度为 O(n)，因为需要借助 n 的常数倍的辅助空间辅助计算，所以空间复杂度为 O(n)。
+func fallingSquares(positions [][]int) (ans []int) {
 	mp := index(positions)
-	N := len(mp)
-	seg := NewsegmentTree(N)
-	max := 0
-	res := make([]int, 0)
-	// 每落一个正方形，收集一下，所有东西组成的图像，最高高度是什么
-	for _, arr := range positions {
-		L := mp[arr[0]]
-		R := mp[arr[0]+arr[1]-1]
-		height := seg.query(L, R, 1, N, 1) + arr[1]
-		max = Max(max, height)
-		res = append(res, max)
-		seg.Update(L, R, height, 1, N, 1)
+	n := len(mp)
+	seg := NewSegmentTree(n)
+	maxH := 0
+	// 计算每个正方形落下后的最大高度
+	for _, info := range positions {
+		left, sideLen := info[0], info[1]
+		l, r := mp[left], mp[left+sideLen-1]
+		h := seg.Query(l, r, 1, n, 1) + sideLen
+		maxH = max(maxH, h)
+		ans = append(ans, maxH)
+		seg.Update(l, r, h, 1, n, 1)
 	}
-	return res
+	return
 }
 
-func Max(a, b int) int {
-	if a < b {
-		return b
+func max(a, b int) int {
+	if a > b {
+		return a
 	}
-	return a
+	return b
 }
