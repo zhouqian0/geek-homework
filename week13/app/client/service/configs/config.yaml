@@ -1,0 +1,14 @@
+server:
+  http:
+    addr: 0.0.0.0:8100
+    timeout: 5s
+  tls:
+    caCertFile: app/client/service/configs/ca.pem
+    certFile: app/client/service/configs/cert.pem
+    keyFile: app/client/service/configs/cert.key
+  remote:
+    addr: 0.0.0.0:9200
+data:
+  database:
+    driver: sqlite3
+    source: file:app/client/service/client.db?&_fk=1

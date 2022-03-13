@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package api.server.service.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "dipper/api/server/service/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.server.service.v1";
+
+service Host {
+  rpc CreateHost (CreateHostReq) returns (CreateHostReply) {
+    option (google.api.http) = {
+      get: "/server/api/host/add"
+    };
+  }
+
+  rpc ListHost (ListHostReq) returns (ListHostReply) {
+    option (google.api.http) = {
+      get: "/server/api/host/all"
+    };
+  };
+
+  rpc GetHostByVerifyCode (GetHostByVerifyCodeReq) returns (GetHostByVerifyCodeReply);
+
+  rpc AuthHost (AuthHostReq) returns (AuthHostReply);
+}
+
+message HostInfo {
+  int64 id = 1;
+  string name = 2;
+  string manager = 3;
+  string phone = 4;
+  string verifyCode = 5;
+}
+
+message CreateHostReq {
+  string name = 1;
+  string manager = 2;
+  string phone = 3;
+  string verifyCode = 4;
+}
+message CreateHostReply {
+  int32 code = 1;
+  string msg = 2;
+  HostInfo data = 3;
+}
+
+message ListHostReq {}
+message ListHostReply {
+  int32 code = 1;
+  string msg = 2;
+  repeated HostInfo data = 3;
+}
+
+message GetHostByVerifyCodeReq {
+  string verifyCode = 1;
+}
+message GetHostByVerifyCodeReply {
+  HostInfo host = 1;
+}
+
+
+message AuthHostReq {
+  string verifyCode = 1;
+}
+message AuthHostReply {
+  string cert = 1;
+  string key = 2;
+}
